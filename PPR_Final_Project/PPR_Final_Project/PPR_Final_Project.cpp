@@ -32,11 +32,14 @@ using namespace std;
 
 /**** Constants ****/
 
-int coresOnMachine = thread::hardware_concurrency();
-int numThreads = 2; // or set to coresOnMachine if you wish
+const int coresOnMachine = thread::hardware_concurrency();
+const int numThreads = 2; // or set to coresOnMachine if you wish
 
-const int boardWidth = 60;
-const int boardHeight = 20;
+const int boardWidth = 100;
+const int boardHeight = 40;
+
+// e.g. 5 -> change for a cell to be initially living is 1/5
+const int fractionOfInitiallyLivingCells = 3;
 
 /**** Defines ****/
 
@@ -56,14 +59,45 @@ void copyBoard(bool source[boardWidth][boardHeight], bool target[boardWidth][boa
 	}
 }
 
+bool calcNewCellState(bool board[boardWidth][boardHeight], int cellX, int cellY)
+{
+	int numLivingNeighbours = 0;
+
+	int leftLimit = cellX - 1 < 0 ? 0 : cellX - 1;
+	int rightLimit = cellX + 1 > boardWidth ? boardWidth : cellX + 1;
+	int topLimit = cellY - 1 < 0 ? 0 : cellY - 1;
+	int bottomLimit = cellY + 1 > boardHeight ? boardHeight : cellY + 1;
+
+	for (int y = topLimit; y < bottomLimit; y++)
+	{
+		for (int x = leftLimit; x < rightLimit; x++)
+		{
+			if (board[x][y])
+			{
+				numLivingNeighbours++;
+			}
+		}
+	}
+
+	bool currentState = board[cellX][cellY];
+
+	// Currently alive
+	if (currentState)
+	{
+		return numLivingNeighbours == 2 || numLivingNeighbours == 3;
+	}
+	
+	// Currently dead
+	return numLivingNeighbours == 3;
+}
+
 void calcNewBoardState(bool oldBoard[boardWidth][boardHeight], bool newBoard[boardWidth][boardHeight])
 {
 	for (int y = 0; y < boardHeight; y++)
 	{
 		for (int x = 0; x < boardWidth; x++)
 		{
-			// for demo: just invert everything
-			newBoard[x][y] = !oldBoard[x][y];
+			newBoard[x][y] = calcNewCellState(oldBoard, x, y);
 		}
 	}
 
@@ -79,10 +113,12 @@ void evolveBoard(bool board[boardWidth][boardHeight])
 	copyBoard(tempBoard, board);
 }
 
-void printBoard(bool board[boardWidth][boardHeight])
+void printBoard(bool board[boardWidth][boardHeight], int iteration)
 {
 	// Reset cursor
 	SetCursorPos(0, 0);
+
+	cout << to_string(iteration) << ". iteration" << endl << endl;
 
 	for (int y = 0; y < boardHeight; y++)
 	{
@@ -108,11 +144,29 @@ void initBoardState(bool board[boardWidth][boardHeight])
 	{
 		for (int x = 0; x < boardWidth; x++)
 		{
-			// for demo: just randomly set every x-th dot alive
-			int r = rand() % 10;
+			// Randomly set cells alive due to given percentage
+			int r = rand() % fractionOfInitiallyLivingCells;
 			board[x][y] = r == 0;
 		}
 	}
+}
+
+void clearConsole()
+{
+	COORD topLeft = { 0, 0 };
+	HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
+	CONSOLE_SCREEN_BUFFER_INFO screen;
+	DWORD written;
+
+	GetConsoleScreenBufferInfo(console, &screen);
+	FillConsoleOutputCharacterA(
+		console, ' ', screen.dwSize.X * screen.dwSize.Y, topLeft, &written
+	);
+	FillConsoleOutputAttribute(
+		console, FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_BLUE,
+		screen.dwSize.X * screen.dwSize.Y, topLeft, &written
+	);
+	SetConsoleCursorPosition(console, topLeft);
 }
 
 int main()
@@ -125,14 +179,20 @@ int main()
 	// False -> Dead
 	bool board[boardWidth][boardHeight] = {};
 
+	int iteration = 0;
+
 	initBoardState(board);
-	printBoard(board);
+	printBoard(board, iteration++);
 
-	cout << endl << "Press any button to continue..." << endl;
-	cin.get();
+	while (true)
+	{
+		cout << endl << "Press any button to continue..." << endl;
+		cin.get();
 
-	evolveBoard(board);
-	printBoard(board);
+		evolveBoard(board);
+		clearConsole();
+		printBoard(board, iteration++);
+	}
 
 	cout << "Press any button to quit programm..." << endl;
 	cin.get();
