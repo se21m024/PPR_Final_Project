@@ -16,14 +16,10 @@
 #include <vector>
 #include <string>
 #include <thread>
-
-//#include <WinUser.h>
-
+#include <random>
 #include <cstdlib>
-//#include <unistd.h>
 #include <fstream>
 #include <sstream>
-
 #include <windows.h>
 #include <wincon.h>
 
@@ -40,11 +36,6 @@ const int boardHeight = 40;
 
 // e.g. 5 -> change for a cell to be initially living is 1/5
 const int fractionOfInitiallyLivingCells = 3;
-
-/**** Defines ****/
-
-//#define SET_COLOR_RED SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_RED)
-//#define SET_COLOR_BLUE SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_BLUE)
 
 /**** Methods ****/
 
@@ -91,8 +82,11 @@ bool calcNewCellState(bool board[boardWidth][boardHeight], int cellX, int cellY)
 	return numLivingNeighbours == 3;
 }
 
-void calcNewBoardState(bool oldBoard[boardWidth][boardHeight], bool newBoard[boardWidth][boardHeight])
+// Returns the microseconds that were necessary to calculate the new board state
+long long calcNewBoardState(bool oldBoard[boardWidth][boardHeight], bool newBoard[boardWidth][boardHeight])
 {
+	auto startTimeStamp = high_resolution_clock::now();
+
 	for (int y = 0; y < boardHeight; y++)
 	{
 		for (int x = 0; x < boardWidth; x++)
@@ -102,24 +96,34 @@ void calcNewBoardState(bool oldBoard[boardWidth][boardHeight], bool newBoard[boa
 	}
 
 	copyBoard(newBoard, oldBoard);
+
+	auto stopTimeStamp = high_resolution_clock::now();
+	return duration_cast<microseconds>(stopTimeStamp - startTimeStamp).count();
 }
 
-void evolveBoard(bool board[boardWidth][boardHeight])
+// Returns the microseconds that were necessary to calculate the new board state
+long long evolveBoard(bool board[boardWidth][boardHeight])
 {
 	// Todo: check if this produces a memory leak
 	bool tempBoard[boardWidth][boardHeight] = {};
 	
-	calcNewBoardState(board, tempBoard);
+	auto calcDuration = calcNewBoardState(board, tempBoard);
 	copyBoard(tempBoard, board);
+
+	return calcDuration;
 }
 
-void printBoard(bool board[boardWidth][boardHeight], int iteration)
+void printHeadline(int iteration, long long microSecondsToCalcLastIteration)
 {
 	// Reset cursor
 	SetCursorPos(0, 0);
 
-	cout << to_string(iteration) << ". iteration" << endl << endl;
+	cout << to_string(iteration) << ". iteration" << endl;
+	cout << "The calculation of this iteration took " << to_string(microSecondsToCalcLastIteration) << " microseconds" << endl << endl;
+}
 
+void printBoard(bool board[boardWidth][boardHeight])
+{
 	for (int y = 0; y < boardHeight; y++)
 	{
 		for (int x = 0; x < boardWidth; x++)
@@ -138,15 +142,24 @@ void printBoard(bool board[boardWidth][boardHeight], int iteration)
 	}
 }
 
+void printBoardAndHeadline(bool board[boardWidth][boardHeight], int iteration, long long microSecondsToCalcLastIteration)
+{
+	printHeadline(iteration, microSecondsToCalcLastIteration);
+	printBoard(board);
+}
+
 void initBoardState(bool board[boardWidth][boardHeight])
 {
+	random_device dev;
+	mt19937 rng(dev());
+	uniform_int_distribution<mt19937::result_type> dist(0, fractionOfInitiallyLivingCells);
+
 	for (int y = 0; y < boardHeight; y++)
 	{
 		for (int x = 0; x < boardWidth; x++)
 		{
-			// Randomly set cells alive due to given percentage
-			int r = rand() % fractionOfInitiallyLivingCells;
-			board[x][y] = r == 0;
+			// Randomly set cells alive due to given probability
+			board[x][y] = (dist(rng) % fractionOfInitiallyLivingCells) == 0;
 		}
 	}
 }
@@ -171,6 +184,8 @@ void clearConsole()
 
 int main()
 {
+	omp_set_num_threads(numThreads);
+
 	// Todo: use std::array or std::vector instead of C style array
 	// Todo (optinal): import initial state from file
 	// ------------------------------------------------------------
@@ -182,21 +197,20 @@ int main()
 	int iteration = 0;
 
 	initBoardState(board);
-	printBoard(board, iteration++);
+	printBoardAndHeadline(board, iteration++, 0);
 
 	while (true)
 	{
-		cout << endl << "Press any button to continue..." << endl;
+		cout << endl << "Press [RETURN] to continue..." << endl;
 		cin.get();
 
-		evolveBoard(board);
+		auto calcDuration = evolveBoard(board);
 		clearConsole();
-		printBoard(board, iteration++);
+		printBoardAndHeadline(board, iteration++, calcDuration);
 	}
 
-	cout << "Press any button to quit programm..." << endl;
+	cout << "Press [RETURN] to quit the programm..." << endl;
 	cin.get();
 
 	return 0;
 }
-
