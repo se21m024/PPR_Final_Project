@@ -35,7 +35,7 @@ const int boardWidth = 100;
 const int boardHeight = 40;
 
 // e.g. 5 -> change for a cell to be initially living is 1/5
-const int fractionOfInitiallyLivingCells = 3;
+const int fractionOfInitiallyLivingCells = 5;
 
 /**** Methods ****/
 
@@ -104,7 +104,7 @@ long long calcNewBoardState(bool oldBoard[boardWidth][boardHeight], bool newBoar
 // Returns the microseconds that were necessary to calculate the new board state
 long long evolveBoard(bool board[boardWidth][boardHeight])
 {
-	// Todo: check if this produces a memory leak
+	// Todo: check if this arry is deallocated automatically
 	bool tempBoard[boardWidth][boardHeight] = {};
 	
 	auto calcDuration = calcNewBoardState(board, tempBoard);
@@ -164,6 +164,22 @@ void initBoardState(bool board[boardWidth][boardHeight])
 	}
 }
 
+bool anyLivingCellsLeft(bool board[boardWidth][boardHeight])
+{
+	for (int y = 0; y < boardHeight; y++)
+	{
+		for (int x = 0; x < boardWidth; x++)
+		{
+			if (board[x][y])
+			{
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
 void clearConsole()
 {
 	COORD topLeft = { 0, 0 };
@@ -186,10 +202,10 @@ int main()
 {
 	omp_set_num_threads(numThreads);
 
-	// Todo: use std::array or std::vector instead of C style array
-	// Todo (optinal): import initial state from file
+	// Todo (optional): use std::array or std::vector instead of C style array
+	// Todo (optional): import initial state from file
 	// ------------------------------------------------------------
-	// Docu:
+	// Cells within the board:
 	// True  -> Alive
 	// False -> Dead
 	bool board[boardWidth][boardHeight] = {};
@@ -199,7 +215,7 @@ int main()
 	initBoardState(board);
 	printBoardAndHeadline(board, iteration++, 0);
 
-	while (true)
+	do
 	{
 		cout << endl << "Press [RETURN] to continue..." << endl;
 		cin.get();
@@ -207,9 +223,9 @@ int main()
 		auto calcDuration = evolveBoard(board);
 		clearConsole();
 		printBoardAndHeadline(board, iteration++, calcDuration);
-	}
+	} while (anyLivingCellsLeft(board));
 
-	cout << "Press [RETURN] to quit the programm..." << endl;
+	cout << endl << "No more living cells left." << endl << "Press [RETURN] to quit the programm..." << endl;
 	cin.get();
 
 	return 0;
