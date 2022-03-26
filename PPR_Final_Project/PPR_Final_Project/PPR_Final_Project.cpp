@@ -24,42 +24,30 @@ using namespace std::chrono;
 using namespace std;
 
 /**************************/
-/********* ToDos **********/
-/**************************/
-
-// (optional? - if yes, should be done before measurement and analysis): use std::array or std::vector instead of C style array
-
-// Calculate and print average duration
-// Implement flag to automatically calculate x iterations
-// Create, print and analyse behaviour and measurements
-
-// (optional): import initial state from file
-// (optional): countLivingCells could be executed in parallel to but not in focus of this exercise
-
-
-/**************************/
 /**** Global Constants ****/
 /**************************/
 
 const int CORES_ON_MACHINES = thread::hardware_concurrency();
-const int NUM_THREADS = 4; // Set to any arbitrary number or to coresOnMachine if you wish
+const int NUM_THREADS = CORES_ON_MACHINES; // Set to any arbitrary number or to coresOnMachine if you wish
 
 // Enable parallel execution
 const bool USE_PARALLEL_IMPLEMENTATION = true;
 
+const int MAX_ITERATIONS = 10;
+
 // Good fit to console: 100 x 40
 // Increase dimensions to e.g. 500 x 500 gain profit from parallel execution
 // Attention! To big numbers lead to an exception
-const int BOARD_WIDTH = 100;
-const int BOARD_HEIGHT = 40;
+const int BOARD_WIDTH = 50;
+const int BOARD_HEIGHT = 50;
 
 // E.g. 5 -> change for a cell to be initially living is 1/5
 const int FRACTION_OF_INITIALLY_LIVING_CELLS = 4;
 
-// Set to true if GUI is desired
+// Set to true if GUI is desired in Demo Mode
 // Maximize console window for better experience
 // (Not recommended when testing with large board.)
-const bool PRINT_BOARD = true;
+const bool USE_GUI = true;
 
 
 /**************************/
@@ -129,26 +117,16 @@ long long calcNewBoardStateSerial(bool oldBoard[BOARD_WIDTH][BOARD_HEIGHT], bool
 // Returns the microseconds that were necessary to calculate the new board state
 long long calcNewBoardStateParallel(bool oldBoard[BOARD_WIDTH][BOARD_HEIGHT], bool newBoard[BOARD_WIDTH][BOARD_HEIGHT])
 {
-	omp_set_num_threads(NUM_THREADS);
-
 	auto startTimeStamp = high_resolution_clock::now();
 
-#pragma omp parallel
+#pragma omp parallel for
+	for (int y = 0; y < BOARD_HEIGHT; y++)
 	{
-		// Uncomment to test if the programm is really executed in parallel
-		//cout << to_string(omp_get_thread_num());
-
-		for (int y = omp_get_thread_num(); y < BOARD_HEIGHT; y += omp_get_num_threads())
+		for (int x = 0; x < BOARD_WIDTH; x++)
 		{
-			for (int x = 0; x < BOARD_WIDTH; x++)
-			{
-				newBoard[x][y] = calcNewCellState(oldBoard, x, y);
-			}
+			newBoard[x][y] = calcNewCellState(oldBoard, x, y);
 		}
 	}
-
-	// Uncomment to test if the programm is really executed in parallel
-	//cin.get();
 
 	auto stopTimeStamp = high_resolution_clock::now();
 	return duration_cast<microseconds>(stopTimeStamp - startTimeStamp).count();
@@ -173,7 +151,6 @@ long long evolveBoard(bool board[BOARD_WIDTH][BOARD_HEIGHT])
 	
 	auto calcDuration = calcNewBoardState(board, tempBoard);
 
-	// Todo: tbd: should this also be done in parallel?
 	copyBoard(tempBoard, board);
 
 	return calcDuration;
@@ -191,7 +168,7 @@ void printHeadline(int iteration, int numLivingCells, long long microSecondsToCa
 
 void printBoard(bool board[BOARD_WIDTH][BOARD_HEIGHT])
 {
-	if (!PRINT_BOARD)
+	if (!USE_GUI)
 	{
 		cout << endl;
 		return;
@@ -273,8 +250,51 @@ void clearConsole()
 	SetConsoleCursorPosition(console, topLeft);
 }
 
-int main()
+void BenchmarkMode()
 {
+	// Cells within the board:
+	// True  -> Alive
+	// False -> Dead
+	bool board[BOARD_WIDTH][BOARD_HEIGHT] = {};
+	bool initBoard[BOARD_WIDTH][BOARD_HEIGHT] = {};
+
+	initBoardState(initBoard);
+
+	for (int threads = 1; threads < NUM_THREADS; threads++)
+	{
+		omp_set_num_threads(threads);
+		cout << endl << "Number of threads: " << to_string(threads) << endl;
+
+		copyBoard(initBoard, board);
+		int iteration = 0;
+
+		long long calcDurations[MAX_ITERATIONS] = {};
+
+		do
+		{
+			auto calcDuration = evolveBoard(board);	
+			calcDurations[iteration++] = calcDuration;
+		} while (iteration < MAX_ITERATIONS);
+
+		for (int i = 0; i < MAX_ITERATIONS; i++)
+		{
+			if (i > 0)
+			{
+				cout << ", ";
+			}
+
+			// Iteration, CalcDuration
+			cout << to_string(calcDurations[i]);
+		}
+
+		cout << endl;
+	}
+}
+
+void DemoMode()
+{
+	omp_set_num_threads(NUM_THREADS);
+
 	// Cells within the board:
 	// True  -> Alive
 	// False -> Dead
@@ -300,6 +320,18 @@ int main()
 	cout << endl << "----------------------------->" << endl;
 	cout << "No more living cells left." << endl << "Press [RETURN] to quit the programm..." << endl;
 	cin.get();
+}
+
+int main()
+{
+	if (USE_GUI)
+	{
+		DemoMode();
+	}
+	else
+	{
+		BenchmarkMode();
+	}
 
 	return 0;
 }
