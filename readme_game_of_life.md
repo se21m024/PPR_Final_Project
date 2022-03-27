@@ -64,7 +64,7 @@ It can be seen, that the most efficient speedup can be achieved by using 2 to 4 
 
 ## Iteration time (50x50 10000 Iterations)
 
-![GameOfLife](./images/screenshot/50x50_1000_iterations_new.PNG)
+![GameOfLife](./images/screenshot/50x50_10000_iterations_new.PNG)
 
 ## Mean Time - Speedup (50x50 10000 Iterations)
 
