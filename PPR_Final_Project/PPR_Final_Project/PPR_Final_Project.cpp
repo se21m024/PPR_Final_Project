@@ -4,7 +4,7 @@
 	Final Project:
 	Game of Life
 
-	Student 1: Thomas Bründl
+	Student 1: Thomas Brï¿½ndl
 	Student 2: Thomas Stummer
 */
 
@@ -33,7 +33,7 @@ const int NUM_THREADS = CORES_ON_MACHINES; // Set to any arbitrary number or to 
 // Enable parallel execution
 const bool USE_PARALLEL_IMPLEMENTATION = true;
 
-const int MAX_ITERATIONS = 10;
+const int MAX_ITERATIONS = 10000;
 
 // Good fit to console: 100 x 40
 // Increase dimensions to e.g. 500 x 500 gain profit from parallel execution
@@ -48,7 +48,6 @@ const int FRACTION_OF_INITIALLY_LIVING_CELLS = 4;
 // Maximize console window for better experience
 // (Not recommended when testing with large board.)
 const bool USE_GUI = true;
-
 
 /**************************/
 /******** Methods *********/
@@ -92,7 +91,7 @@ bool calcNewCellState(bool board[BOARD_WIDTH][BOARD_HEIGHT], int cellX, int cell
 	{
 		return numLivingNeighbours == 2 || numLivingNeighbours == 3;
 	}
-	
+
 	// Currently dead
 	return numLivingNeighbours == 3;
 }
@@ -148,7 +147,7 @@ long long evolveBoard(bool board[BOARD_WIDTH][BOARD_HEIGHT])
 {
 	// Todo: check if this arry is deallocated automatically
 	bool tempBoard[BOARD_WIDTH][BOARD_HEIGHT] = {};
-	
+
 	auto calcDuration = calcNewBoardState(board, tempBoard);
 
 	copyBoard(tempBoard, board);
@@ -163,7 +162,8 @@ void printHeadline(int iteration, int numLivingCells, long long microSecondsToCa
 
 	cout << to_string(iteration) << ". iteration" << endl;
 	cout << "Living cells: " << to_string(numLivingCells) << endl;
-	cout << "The calculation of this iteration took " << to_string(microSecondsToCalcLastIteration) << " microseconds" << endl << endl;
+	cout << "The calculation of this iteration took " << to_string(microSecondsToCalcLastIteration) << " microseconds" << endl
+		 << endl;
 }
 
 void printBoard(bool board[BOARD_WIDTH][BOARD_HEIGHT])
@@ -234,19 +234,17 @@ int countLivingCells(bool board[BOARD_WIDTH][BOARD_HEIGHT])
 
 void clearConsole()
 {
-	COORD topLeft = { 0, 0 };
+	COORD topLeft = {0, 0};
 	HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
 	CONSOLE_SCREEN_BUFFER_INFO screen;
 	DWORD written;
 
 	GetConsoleScreenBufferInfo(console, &screen);
 	FillConsoleOutputCharacterA(
-		console, ' ', screen.dwSize.X * screen.dwSize.Y, topLeft, &written
-	);
+		console, ' ', screen.dwSize.X * screen.dwSize.Y, topLeft, &written);
 	FillConsoleOutputAttribute(
 		console, FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_BLUE,
-		screen.dwSize.X * screen.dwSize.Y, topLeft, &written
-	);
+		screen.dwSize.X * screen.dwSize.Y, topLeft, &written);
 	SetConsoleCursorPosition(console, topLeft);
 }
 
@@ -259,11 +257,12 @@ void BenchmarkMode()
 	bool initBoard[BOARD_WIDTH][BOARD_HEIGHT] = {};
 
 	initBoardState(initBoard);
-
+	cout << "[";
 	for (int threads = 1; threads < NUM_THREADS; threads++)
 	{
 		omp_set_num_threads(threads);
-		cout << endl << "Number of threads: " << to_string(threads) << endl;
+		// cout << endl << "Number of threads: " << to_string(threads) << endl;
+		cout << "[";
 
 		copyBoard(initBoard, board);
 		int iteration = 0;
@@ -272,7 +271,7 @@ void BenchmarkMode()
 
 		do
 		{
-			auto calcDuration = evolveBoard(board);	
+			auto calcDuration = evolveBoard(board);
 			calcDurations[iteration++] = calcDuration;
 		} while (iteration < MAX_ITERATIONS);
 
@@ -287,8 +286,9 @@ void BenchmarkMode()
 			cout << to_string(calcDurations[i]);
 		}
 
-		cout << endl;
+		cout << "]," << endl;
 	}
+	cout << "]";
 }
 
 void DemoMode()
@@ -308,7 +308,8 @@ void DemoMode()
 
 	do
 	{
-		cout << endl << "Press [RETURN] to calculate next iteration..." << endl;
+		cout << endl
+			 << "Press [RETURN] to calculate next iteration..." << endl;
 		cin.get();
 
 		auto calcDuration = evolveBoard(board);
@@ -317,8 +318,10 @@ void DemoMode()
 		printBoardAndHeadline(board, iteration++, numLivingCells, calcDuration);
 	} while (numLivingCells > 0);
 
-	cout << endl << "----------------------------->" << endl;
-	cout << "No more living cells left." << endl << "Press [RETURN] to quit the programm..." << endl;
+	cout << endl
+		 << "----------------------------->" << endl;
+	cout << "No more living cells left." << endl
+		 << "Press [RETURN] to quit the programm..." << endl;
 	cin.get();
 }
 
