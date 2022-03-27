@@ -38,8 +38,9 @@ The initial pattern constitutes the seed of the system. The first generation is 
 # 2. Point out parts of the program/algorithm which could be parallelized
 
 <br/>
-We used a parallel for loop to parallize every new zell state calculation.
+We used a parallel for loop to parallize every new cell state calculation.
 
+<br/>
 <br/>
 
 ![GameOfLife](./images/screenshot/what_can_be_parallized.PNG)
