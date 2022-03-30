@@ -35,6 +35,8 @@ The initial pattern constitutes the seed of the system. The first generation is 
 
 <br/>
 
+<div style="page-break-after: always"></div>
+
 # 2. Point out parts of the program/algorithm which could be parallelized
 
 <br/>
@@ -61,7 +63,7 @@ Another valid option would be to span two tasks and assign each half of the boar
 <br/><br/>
 It can be seen, that the most efficient speedup can be achieved by using 2 to 4 threads. After 4 threads the speed up decreases. At 8 threads another decrease in the slope can be seen. Only little speedup gains can be achieved by using 10 threads compared to 8 threads. However, the speedup quotient is quite linear until the number of threads used reaches nearly the maximum number of available (logical) CPU cores.
 
-<br/>
+<div style="page-break-after: always"></div>
 
 ## Iteration time (50x50 10000 Iterations)
 
@@ -71,9 +73,7 @@ It can be seen, that the most efficient speedup can be achieved by using 2 to 4 
 
 ![GameOfLife](./images/screenshot/50x50_10000_iterations_Threads_speedUp_new.PNG)
 
-<br>
-<hr>
-<br>
+<div style="page-break-after: always"></div>
 
 ## Iteration time (500x500 1000 Iterations)
 
@@ -83,9 +83,7 @@ It can be seen, that the most efficient speedup can be achieved by using 2 to 4 
 
 ![GameOfLife](./images/screenshot/500x500_1000_iterations_Threads_speedUp_new.PNG)
 
-<br>
-<hr>
-<br>
+<div style="page-break-after: always"></div>
 
 ## Iteration time (100x100 1000 Iterations)
 
