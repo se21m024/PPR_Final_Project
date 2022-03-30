@@ -51,7 +51,8 @@ We used a parallel for loop to parallize every new cell state calculation.
 
 <br/>
 
-Todo: Machen wir am Mittwoch nach der Prüfung ....
+We chose to split the board in lines and directed omp to take care of the thread scheduling.
+Another valid option would be to span two tasks and assign each half of the board. This step could have been repeated recursively until a predefined threshold depth would be reached. We choose the first option because it is simpler and more straight forward.
 
 <br/>
 
