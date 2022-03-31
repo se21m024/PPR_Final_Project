@@ -33,13 +33,13 @@ const int NUM_THREADS = CORES_ON_MACHINES; // Set to any arbitrary number or to 
 // Enable parallel execution
 const bool USE_PARALLEL_IMPLEMENTATION = true;
 
-const int MAX_ITERATIONS = 10000;
+const int MAX_ITERATIONS = 1000;
 
 // Good fit to console: 100 x 40
 // Increase dimensions to e.g. 500 x 500 gain profit from parallel execution
 // Attention! To big numbers lead to an exception
-const int BOARD_WIDTH = 50;
-const int BOARD_HEIGHT = 50;
+const int BOARD_WIDTH = 100;
+const int BOARD_HEIGHT = 40;
 
 // E.g. 5 -> change for a cell to be initially living is 1/5
 const int FRACTION_OF_INITIALLY_LIVING_CELLS = 4;
@@ -145,7 +145,6 @@ long long calcNewBoardState(bool oldBoard[BOARD_WIDTH][BOARD_HEIGHT], bool newBo
 // Returns the microseconds that were necessary to calculate the new board state
 long long evolveBoard(bool board[BOARD_WIDTH][BOARD_HEIGHT])
 {
-	// Todo: check if this arry is deallocated automatically
 	bool tempBoard[BOARD_WIDTH][BOARD_HEIGHT] = {};
 
 	auto calcDuration = calcNewBoardState(board, tempBoard);
