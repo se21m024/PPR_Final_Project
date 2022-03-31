@@ -4,7 +4,7 @@
 	Final Project:
 	Game of Life
 
-	Student 1: Thomas Br�ndl
+	Student 1: Thomas Bründl
 	Student 2: Thomas Stummer
 */
 
